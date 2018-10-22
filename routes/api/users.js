@@ -7,6 +7,12 @@ const jwt = require('jsonwebtoken');
 const keys = require('./../../config/keys');
 const passport = require('passport');
 
+// load input validation 
+const validateRegisterInput = require('../../validation/register');
+const validateLoginInput    = require('../../validation/login');
+
+
+
 // @route  GET api/users/test
 // @desc   Tests users route
 // @access Public 
@@ -19,6 +25,13 @@ router.get('/test', (req, res) => {
 // @desc   Register a user
 // @access Public
 router.post('/register', (req, res) => {
+
+    const { errors, isValid } = validateRegisterInput(req.body);
+    // check validation
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
+
     User.findOne({email: req.body.email})
         .then((user) => {
             if (user) {
@@ -57,13 +70,21 @@ router.post('/register', (req, res) => {
 // @desc   Login a user / Returning JWTtoken
 // @access Public
 router.post('/login', (req, res) => {
+    const { errors, isValid } = validateLoginInput(req.body);
+    // check validation
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
+
     const email    = req.body.email;
     const password = req.body.password;
 
-    console.log(password);
     User.findOne({email: email})
         .then(user => {
-            if (!user) return res.status(404).json({email: 'User not found!'});
+            if (!user)  {
+                errors.email = 'User not found!';
+                return res.status(404).json(errors);            
+            }
 
             // check password
             bcrypt.compare(password, user.password)
@@ -79,7 +100,8 @@ router.post('/login', (req, res) => {
                             })
                         });
                       } else {
-                        return res.status(400).json({password: 'Password incorrect!'});
+                        errors.password = 'Password incorrect!';
+                        return res.status(400).json(errors.password);
                       }
                   })
         })

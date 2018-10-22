@@ -36,7 +36,6 @@ app.use('/api/users', users);
 app.use('/api/profile', profile);
 app.use('/api/posts', posts);
 
-
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
